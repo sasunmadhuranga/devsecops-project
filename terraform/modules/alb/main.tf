@@ -52,18 +52,41 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
   }
 }
 
-# Allow ALB service account to write logs — us-east-1 ELB account ID
+# Enable server-side logging on the log bucket itself — satisfies CKV_AWS_18
+resource "aws_s3_bucket_logging" "alb_logs" {
+  bucket        = aws_s3_bucket.alb_logs.id
+  target_bucket = aws_s3_bucket.alb_logs.id
+  target_prefix = "self-logs/"
+}
+
+# Enforce HTTPS-only access — satisfies CKV_AWS_54
 resource "aws_s3_bucket_policy" "alb_logs" {
   bucket = aws_s3_bucket.alb_logs.id
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { AWS = "arn:aws:iam::127311923021:root" }
-      Action    = "s3:PutObject"
-      Resource  = "${aws_s3_bucket.alb_logs.arn}/alb/AWSLogs/*"
-    }]
+    Statement = [
+      {
+        Sid       = "AllowALBLogs"
+        Effect    = "Allow"
+        Principal = { AWS = "arn:aws:iam::127311923021:root" }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.alb_logs.arn}/alb/AWSLogs/*"
+      },
+      {
+        Sid       = "DenyNonTLS"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource  = [
+          aws_s3_bucket.alb_logs.arn,
+          "${aws_s3_bucket.alb_logs.arn}/*"
+        ]
+        Condition = {
+          Bool = { "aws:SecureTransport" = "false" }
+        }
+      }
+    ]
   })
 }
 
