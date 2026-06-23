@@ -2,9 +2,9 @@ name: DevSecOps Pipeline
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, develop]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 env:
   AWS_REGION: us-east-1
@@ -310,13 +310,13 @@ jobs:
           artifact_name: zap-api-report
 
   # ---------------------------------------------------------------
-  # DEPLOY: ECS Fargate — Production (main branch only)
+  # DEPLOY: ECS Fargate — Production (master branch only)
   # ---------------------------------------------------------------
   deploy-production:
     name: Deploy — ECS Fargate (Production)
     runs-on: ubuntu-latest
     needs: dast
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     environment: production
     steps:
       - name: Checkout code
