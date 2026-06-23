@@ -1,0 +1,343 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: devsecops-app
+  ECS_CLUSTER: devsecops-cluster
+  ECS_SERVICE: devsecops-service
+  ECS_TASK_DEFINITION: devsecops-task
+  CONTAINER_NAME: app
+  TF_STATE_BUCKET: devsecops-tfstate-YOUR_ACCOUNT_ID  # update this
+
+jobs:
+  # ---------------------------------------------------------------
+  # GATE 1: Secret Scanning
+  # ---------------------------------------------------------------
+  secret-scanning:
+    name: Gate 1 — Secret Scanning (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full git history — Gitleaks scans all commits
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No GITLEAKS_LICENSE needed — public repo is free
+
+  # ---------------------------------------------------------------
+  # GATE 2: SAST + Dependency Audit + Code Quality (SonarCloud)
+  # ---------------------------------------------------------------
+  sast:
+    name: Gate 2 — SAST (Bandit + Semgrep + pip-audit + SonarCloud)
+    runs-on: ubuntu-latest
+    needs: secret-scanning
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # SonarCloud needs full history
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python security tools
+        run: pip install bandit pip-audit
+
+      # Bandit — Python-specific SAST
+      - name: Run Bandit
+        run: |
+          bandit -r app/ \
+            -f sarif \
+            -o bandit-results.sarif \
+            --severity-level medium \
+            --confidence-level medium
+        continue-on-error: true
+
+      - name: Upload Bandit SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: bandit-results.sarif
+          category: bandit
+
+      # Semgrep — OWASP Top 10 + JWT + secrets rules
+      - name: Run Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/python
+            p/owasp-top-ten
+            p/secrets
+            p/jwt
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+      # pip-audit — CVEs in PyPI dependencies
+      - name: Run pip-audit
+        run: |
+          pip install -r requirements.txt
+          pip-audit \
+            --requirement requirements.txt \
+            --format sarif \
+            --output pip-audit-results.sarif
+        continue-on-error: true
+
+      - name: Upload pip-audit SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: pip-audit-results.sarif
+          category: pip-audit
+
+      # SonarCloud — code quality + security hotspots dashboard
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # ---------------------------------------------------------------
+  # GATE 3: IaC Scanning (Checkov on Terraform)
+  # ---------------------------------------------------------------
+  iac-scan:
+    name: Gate 3 — IaC Scan (Checkov)
+    runs-on: ubuntu-latest
+    needs: secret-scanning
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov on Terraform
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: terraform/
+          framework: terraform
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+          soft_fail: false
+          check: CKV_AWS_*
+
+      - name: Upload Checkov SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: checkov-results.sarif
+          category: checkov
+
+  # ---------------------------------------------------------------
+  # BUILD: Docker image → ECR
+  # ---------------------------------------------------------------
+  build:
+    name: Build — Docker + ECR push
+    runs-on: ubuntu-latest
+    needs: [sast, iac-scan]
+    outputs:
+      image: ${{ steps.build-image.outputs.image }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag and push Docker image to ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+  # ---------------------------------------------------------------
+  # GATE 4: Container Image Scanning (Trivy)
+  # ---------------------------------------------------------------
+  container-scan:
+    name: Gate 4 — Container Scan (Trivy)
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      security-events: write
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ needs.build.outputs.image }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy
+
+  # ---------------------------------------------------------------
+  # DEPLOY: ECS Fargate — Staging
+  # ---------------------------------------------------------------
+  deploy-staging:
+    name: Deploy — ECS Fargate (Staging)
+    runs-on: ubuntu-latest
+    needs: container-scan
+    environment: staging
+    outputs:
+      staging_url: ${{ steps.get-alb-url.outputs.url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # Init with staging-specific state key
+      - name: Terraform Init (Staging)
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" \
+            -backend-config="key=devsecops/staging/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+        working-directory: terraform/
+
+      - name: Terraform Apply (Staging)
+        run: |
+          terraform apply -auto-approve \
+            -var-file=envs/staging/terraform.tfvars \
+            -var="jwt_secret=${{ secrets.JWT_SECRET_STAGING }}" \
+            -var="image_tag=${{ github.sha }}"
+        working-directory: terraform/
+
+      - name: Get ALB staging URL
+        id: get-alb-url
+        run: |
+          URL=$(aws elbv2 describe-load-balancers \
+            --names devsecops-staging-alb \
+            --query "LoadBalancers[0].DNSName" \
+            --output text)
+          echo "url=http://$URL" >> $GITHUB_OUTPUT
+
+  # ---------------------------------------------------------------
+  # GATE 5: DAST (OWASP ZAP against live staging)
+  # ---------------------------------------------------------------
+  dast:
+    name: Gate 5 — DAST (OWASP ZAP)
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    permissions:
+      security-events: write
+      issues: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Wait for staging to be healthy
+        run: |
+          echo "Waiting for staging endpoint..."
+          sleep 30
+          curl --retry 10 --retry-delay 5 \
+            ${{ needs.deploy-staging.outputs.staging_url }}/health
+
+      # ZAP Baseline — passive + active checks
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: ${{ needs.deploy-staging.outputs.staging_url }}
+          rules_file_name: .zap/rules.tsv
+          cmd_options: "-a"
+          fail_action: true
+          artifact_name: zap-baseline-report
+
+      # ZAP API scan — tests OpenAPI spec routes
+      - name: Run OWASP ZAP API Scan
+        uses: zaproxy/action-api-scan@v0.7.0
+        with:
+          target: ${{ needs.deploy-staging.outputs.staging_url }}/openapi.json
+          format: openapi
+          fail_action: true
+          artifact_name: zap-api-report
+
+  # ---------------------------------------------------------------
+  # DEPLOY: ECS Fargate — Production (main branch only)
+  # ---------------------------------------------------------------
+  deploy-production:
+    name: Deploy — ECS Fargate (Production)
+    runs-on: ubuntu-latest
+    needs: dast
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # Init with production-specific state key
+      - name: Terraform Init (Production)
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" \
+            -backend-config="key=devsecops/production/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+        working-directory: terraform/
+
+      - name: Terraform Apply (Production)
+        run: |
+          terraform apply -auto-approve \
+            -var-file=envs/production/terraform.tfvars \
+            -var="jwt_secret=${{ secrets.JWT_SECRET_PRODUCTION }}" \
+            -var="image_tag=${{ github.sha }}"
+        working-directory: terraform/
+
+      - name: Notify deployment success
+        run: |
+          echo "✅ Production deployment complete: ${{ github.sha }}"

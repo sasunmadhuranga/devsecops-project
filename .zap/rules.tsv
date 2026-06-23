@@ -1,0 +1,9 @@
+# ZAP rules configuration
+# Format: rule_id	IGNORE/WARN/FAIL	description
+#
+# 10015 = Incomplete or No Cache-control Header Set (noisy for APIs)
+10015	IGNORE	Cache-control not required for API endpoints
+# 10027 = Information Disclosure - Suspicious Comments
+10027	IGNORE	Dev comments in OpenAPI spec
+# 90033 = Loosely Scoped Cookie
+90033	IGNORE	JWT in Authorization header, no cookies used

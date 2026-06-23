@@ -1,0 +1,12 @@
+@"
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+.terraform.lock.hcl
+terraform.tfvars
+*.auto.tfvars
+crash.log
+override.tf
+override.tf.json
+"@ | Set-Content terraform\.gitignore

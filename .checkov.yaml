@@ -1,0 +1,16 @@
+# .checkov.yaml — project-level policy overrides
+# Each skip must be justified.
+
+skip-check:
+  # CKV_AWS_91: ALB access logging — skipped to avoid S3 log bucket cost in demo
+  - CKV_AWS_91
+  # CKV_AWS_150: ALB deletion protection — intentionally off for easy teardown in demo
+  - CKV_AWS_150
+  # CKV_AWS_131: ALB drop invalid headers — add when HTTPS listener is configured
+  - CKV_AWS_131
+
+soft-fail: false          # still fail pipeline on any other HIGH finding
+framework:
+  - terraform
+directory:
+  - terraform/
