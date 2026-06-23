@@ -101,12 +101,13 @@ jobs:
           sarif_file: pip-audit-results.sarif
           category: pip-audit
 
-      # SonarCloud — code quality + security hotspots dashboard
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+      # SonarQube Cloud (formerly SonarCloud) — code quality + security hotspots dashboard
+      # sonarcloud-github-action was archived Oct 2025; sonarqube-scan-action is the replacement
+      - name: SonarQube Cloud Scan
+        uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e  # v8.2.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
 
   # ---------------------------------------------------------------
   # GATE 3: IaC Scanning (Checkov on Terraform)
@@ -230,7 +231,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e  # v4.0.1
 
       # Init with staging-specific state key
       - name: Terraform Init (Staging)
@@ -241,11 +242,13 @@ jobs:
             -backend-config="region=${{ env.AWS_REGION }}"
         working-directory: terraform/
 
+      # Secret passed via env var — avoids expanding secrets directly in run block
       - name: Terraform Apply (Staging)
+        env:
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET_STAGING }}
         run: |
           terraform apply -auto-approve \
             -var-file=envs/staging/terraform.tfvars \
-            -var="jwt_secret=${{ secrets.JWT_SECRET_STAGING }}" \
             -var="image_tag=${{ github.sha }}"
         working-directory: terraform/
 
@@ -319,7 +322,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e  # v4.0.1
 
       # Init with production-specific state key
       - name: Terraform Init (Production)
@@ -330,11 +333,13 @@ jobs:
             -backend-config="region=${{ env.AWS_REGION }}"
         working-directory: terraform/
 
+      # Secret passed via env var — avoids expanding secrets directly in run block
       - name: Terraform Apply (Production)
+        env:
+          TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET_PRODUCTION }}
         run: |
           terraform apply -auto-approve \
             -var-file=envs/production/terraform.tfvars \
-            -var="jwt_secret=${{ secrets.JWT_SECRET_PRODUCTION }}" \
             -var="image_tag=${{ github.sha }}"
         working-directory: terraform/
 
