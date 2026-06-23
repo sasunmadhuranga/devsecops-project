@@ -8,13 +8,16 @@ directory:
   - terraform/
 
 skip-check:
-  # CKV_AWS_91: ALB access logging — FIXED: now logging to S3
-  # CKV_AWS_2:  ALB HTTP listener — demo project has no domain/ACM cert.
-  #             In production: add ACM cert and redirect port 80 → 443.
+  # CKV_AWS_2: ALB HTTP listener — demo project has no domain or ACM certificate.
+  #   Production fix: provision ACM cert, add HTTPS listener on port 443,
+  #   and change this listener to redirect port 80 → 443.
   - CKV_AWS_2
-  # CKV_AWS_150: ALB deletion protection — intentionally off for easy teardown in demo
+  # CKV_AWS_150: ALB deletion protection — intentionally off for easy teardown in demo.
+  #   Production fix: set enable_deletion_protection = true.
   - CKV_AWS_150
-  # CKV_AWS_131: ALB drop invalid headers — add when HTTPS listener is configured
+  # CKV_AWS_131: ALB drop invalid headers — requires HTTPS listener to be meaningful.
+  #   Production fix: add drop_invalid_header_fields = true once HTTPS is configured.
   - CKV_AWS_131
-  # CKV_AWS_338: CloudWatch log retention — FIXED: now 30 days.
-  #              In production increase to 90+ days for compliance.
+  # CKV_AWS_338: CloudWatch log retention — fixed to 30 days (was 7).
+  #   Production fix: increase to 90+ days for audit/compliance requirements.
+  - CKV_AWS_338
