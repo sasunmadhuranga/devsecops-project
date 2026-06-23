@@ -10,3 +10,4 @@ crash.log
 override.tf
 override.tf.json
 "@ | Set-Content terraform\.gitignore
+.env
