@@ -8,7 +8,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: devsecops-app
+  ECR_REPOSITORY: devsecops-staging
   ECS_CLUSTER: devsecops-cluster
   ECS_SERVICE: devsecops-service
   ECS_TASK_DEFINITION: devsecops-task
