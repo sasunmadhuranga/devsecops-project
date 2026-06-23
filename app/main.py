@@ -31,14 +31,6 @@ app = FastAPI(
 # CORS — restrict in production via env var
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
-)
-
 app.add_middleware(RequestLoggingMiddleware)
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
@@ -54,3 +46,11 @@ async def health_check():
 @app.get("/", tags=["root"])
 async def root():
     return {"message": "DevSecOps Demo API is running"}
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
