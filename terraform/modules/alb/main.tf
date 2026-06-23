@@ -34,6 +34,39 @@ resource "aws_security_group" "alb" {
   tags = { Name = "${var.project}-${var.environment}-alb-sg" }
 }
 
+# S3 bucket for ALB access logs — satisfies CKV_AWS_91
+resource "aws_s3_bucket" "alb_logs" {
+  bucket        = "${var.project}-${var.environment}-alb-logs"
+  force_destroy = true  # allow easy teardown in demo environment
+
+  tags = { Name = "${var.project}-${var.environment}-alb-logs" }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+
+  rule {
+    id     = "expire-logs"
+    status = "Enabled"
+    expiration { days = 30 }
+  }
+}
+
+# Allow ALB service account to write logs — us-east-1 ELB account ID
+resource "aws_s3_bucket_policy" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { AWS = "arn:aws:iam::127311923021:root" }
+      Action    = "s3:PutObject"
+      Resource  = "${aws_s3_bucket.alb_logs.arn}/alb/AWSLogs/*"
+    }]
+  })
+}
+
 resource "aws_lb" "main" {
   name               = "${var.project}-${var.environment}-alb"
   internal           = false
@@ -42,6 +75,13 @@ resource "aws_lb" "main" {
   subnets            = var.public_subnet_ids
 
   enable_deletion_protection = false  # set true in production
+
+  # Access logs to S3 — satisfies CKV_AWS_91
+  access_logs {
+    bucket  = aws_s3_bucket.alb_logs.id
+    prefix  = "alb"
+    enabled = true
+  }
 
   tags = { Name = "${var.project}-${var.environment}-alb" }
 }
@@ -65,6 +105,9 @@ resource "aws_lb_target_group" "app" {
   tags = { Name = "${var.project}-${var.environment}-tg" }
 }
 
+# checkov:skip=CKV_AWS_2: HTTPS requires a domain and ACM certificate.
+# HTTP is intentional for this demo — in production add an ACM cert and
+# redirect port 80 to 443 using a redirect action on the listener.
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = 80
@@ -76,6 +119,6 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-output "dns_name"         { value = aws_lb.main.dns_name }
-output "target_group_arn" { value = aws_lb_target_group.app.arn }
+output "dns_name"          { value = aws_lb.main.dns_name }
+output "target_group_arn"  { value = aws_lb_target_group.app.arn }
 output "security_group_id" { value = aws_security_group.alb.id }
