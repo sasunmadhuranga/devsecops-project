@@ -15,11 +15,6 @@ RUN pip install --upgrade pip \
 # ── Stage 2: runtime ──────────────────────────────────────────────
 FROM python:3.11-slim AS runtime
 
-# Remove perl — not needed at runtime, eliminates multiple CVEs
-# (CVE-2026-42496, CVE-2026-8376, CVE-2026-42497, CVE-2026-48962, CVE-2026-9538)
-RUN apt-get update && apt-get purge -y --auto-remove perl perl-base \
-    && rm -rf /var/lib/apt/lists/*
-
 # Security: run as non-root user
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
