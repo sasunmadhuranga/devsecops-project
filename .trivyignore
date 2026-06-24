@@ -28,3 +28,12 @@ CVE-2026-42497
 CVE-2026-8376
 CVE-2026-48962
 CVE-2026-9538
+
+# ── setuptools vendored packages (base image) ─────────────────────
+# python:3.11-slim ships with setuptools-79.0.1 which vendors old
+# versions of jaraco.context and wheel containing these CVEs.
+# We install setuptools-80.9.0 on top but the base image version
+# cannot be removed as it's part of the Python base layer.
+# Our application code does not invoke these vendored packages.
+CVE-2026-23949
+CVE-2026-24049
