@@ -210,16 +210,27 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419  # v2.1.5
 
-      # trivy-action@master was compromised March 2026 — pinned to v0.36.0 (post-compromise clean release)
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.36.0
+      # Step 1 — print full table for debugging (never fails)
+      - name: Trivy scan — full report
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          image-ref: ${{ needs.build.outputs.image }}
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+          skip-version-check: "true"
+
+      # Step 2 — generate SARIF and block on CRITICAL/HIGH
+      # trivy-action@master was compromised March 2026 — pinned to v0.36.0
+      - name: Trivy scan — SARIF + gate
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
           image-ref: ${{ needs.build.outputs.image }}
           format: sarif
           output: trivy-results.sarif
           severity: CRITICAL,HIGH
           exit-code: "1"
-          ignore-unfixed: true
+          skip-version-check: "true"
 
       - name: Upload Trivy SARIF
         uses: github/codeql-action/upload-sarif@v4
@@ -278,6 +289,7 @@ jobs:
             --query "LoadBalancers[0].DNSName" \
             --output text)
           echo "url=http://$URL" >> $GITHUB_OUTPUT
+
 
   # ---------------------------------------------------------------
   # GATE 5: DAST (OWASP ZAP against live staging)
