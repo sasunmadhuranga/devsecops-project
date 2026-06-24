@@ -7,6 +7,10 @@ variable "alb_target_group_arn" {}
 variable "alb_security_group" {}
 variable "jwt_secret_arn" {}
 variable "image_tag" {}
+variable "demo_password_arn" {
+  description = "SSM parameter ARN containing demo password"
+  type        = string
+}
 
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
@@ -64,7 +68,10 @@ resource "aws_iam_role_policy" "ssm_read" {
     Statement = [{
       Effect   = "Allow"
       Action   = ["ssm:GetParameters", "ssm:GetParameter"]
-      Resource = [var.jwt_secret_arn]
+      Resource = [
+        var.jwt_secret_arn,
+        var.demo_password_arn
+      ]
     }]
   })
 }
