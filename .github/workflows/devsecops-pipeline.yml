@@ -10,8 +10,8 @@ env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: devsecops-staging
   ECS_CLUSTER: devsecops-staging-cluster        # was: devsecops-cluster
-  ECS_SERVICE: devsecops-service
-  ECS_TASK_DEFINITION: devsecops-task
+  ECS_SERVICE: devsecops-staging-service        # was: devsecops-service
+  ECS_TASK_DEFINITION: devsecops-staging        # was: devsecops-task
   CONTAINER_NAME: app
   TF_STATE_BUCKET: devsecops-tfstate-630596767614
 

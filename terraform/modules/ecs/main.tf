@@ -6,7 +6,7 @@ variable "ecr_repository_url" {}
 variable "alb_target_group_arn" {}
 variable "alb_security_group" {}
 variable "jwt_secret_arn" {}
-variable "image_tag" { default = "latest" }
+variable "image_tag" {}
 
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
@@ -162,10 +162,6 @@ resource "aws_ecs_service" "app" {
 
   deployment_minimum_healthy_percent = 100
   deployment_maximum_percent         = 200
-
-  lifecycle {
-    ignore_changes = [task_definition]  # CI manages image updates
-  }
 
   tags = { Name = "${var.project}-${var.environment}-service" }
 }
