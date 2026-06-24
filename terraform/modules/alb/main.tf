@@ -131,10 +131,10 @@ resource "aws_lb_target_group" "app" {
 # checkov:skip=CKV_AWS_2: HTTPS requires a domain and ACM certificate.
 # HTTP is intentional for this demo — in production add an ACM cert and
 # redirect port 80 to 443 using a redirect action on the listener.
-resource "aws_lb_listener" "http" {
+resource "aws_lb_listener" "http" { # nosemgrep: terraform.aws.security.insecure-load-balancer-tls-version
   load_balancer_arn = aws_lb.main.arn
   port              = 80
-  protocol          = "HTTP"  # nosemgrep: terraform.aws.security.insecure-load-balancer-tls-version
+  protocol          = "HTTP"
 
   default_action {
     type             = "forward"
