@@ -333,7 +333,6 @@ jobs:
           rules_file_name: .zap/rules.tsv
           cmd_options: "-a"
           fail_action: true
-          artifact_name: zap-baseline-report-${{ github.run_id }}
 
       - name: Run OWASP ZAP API Scan
         uses: zaproxy/action-api-scan@v0.7.0
@@ -341,7 +340,6 @@ jobs:
           target: ${{ needs.deploy-staging.outputs.staging_url }}/openapi.json
           format: openapi
           fail_action: true
-          artifact_name: zap-api-report-${{ github.run_id }}
 
   # ---------------------------------------------------------------
   # DEPLOY: ECS Fargate — Production (main/master branch only)
