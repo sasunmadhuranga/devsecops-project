@@ -75,7 +75,8 @@ jobs:
           path: bandit-results.json
 
       # Semgrep CLI — semgrep/semgrep-action is deprecated; use CLI directly
-      - name: Run Semgrep
+      # Semgrep CLI — semgrep/semgrep-action is deprecated; use CLI directly
+      - name: Run Semgrep (SARIF output)
         run: |
           semgrep ci \
             --config p/python \
@@ -83,14 +84,18 @@ jobs:
             --config p/secrets \
             --config p/jwt \
             --sarif \
-            --output semgrep-results.sarif \
-            --text          
+            --output semgrep-results.sarif
+        continue-on-error: true  # let the next step always run
 
-      - name: Upload Semgrep SARIF
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: semgrep-results.sarif
-          category: semgrep
+      - name: Print Semgrep findings
+        run: |
+          semgrep ci \
+            --config p/python \
+            --config p/owasp-top-ten \
+            --config p/secrets \
+            --config p/jwt \
+            --text
+        # This is the step that actually gates — exit code 1 on findings blocks the job
 
       # pip-audit — CVEs in PyPI dependencies
       - name: Run pip-audit
