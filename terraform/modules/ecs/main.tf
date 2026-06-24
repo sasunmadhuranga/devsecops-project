@@ -112,12 +112,16 @@ resource "aws_ecs_task_definition" "app" {
     secrets = [{
       name      = "JWT_SECRET"
       valueFrom = var.jwt_secret_arn
-    }]
+    },
+    {
+      name      = "DEMO_PASSWORD"
+      valueFrom = var.demo_password_arn
+    }
+    ]
 
     environment = [
       { name = "ENVIRONMENT", value = var.environment },
-      { name = "ALLOWED_ORIGINS", value = "*" },
-      { name = "DEMO_PASSWORD",  value = "demo1234" }
+      { name = "ALLOWED_ORIGINS", value = "*" }
     ]
 
     logConfiguration = {

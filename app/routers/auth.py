@@ -11,7 +11,7 @@ router = APIRouter()
 JWT_SECRET = os.getenv("JWT_SECRET")  # loaded from SSM Parameter Store via ECS task def
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_HOURS = 24
-DEMO_PASSWORD = os.getenv("DEMO_PASSWORD", "demo123")
+DEMO_PASSWORD = os.getenv("DEMO_PASSWORD")
 
 now = datetime.now(timezone.utc)
 

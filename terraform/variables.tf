@@ -42,3 +42,5 @@ variable "jwt_secret" {
   type        = string
   sensitive   = true
 }
+
+variable "demo_password_arn" {}

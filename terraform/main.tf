@@ -82,4 +82,5 @@ module "ecs" {
   alb_security_group   = module.alb.security_group_id
   jwt_secret_arn       = module.ssm.jwt_secret_arn
   image_tag            = var.image_tag
+  demo_password_arn    = var.demo_password_arn
 }
