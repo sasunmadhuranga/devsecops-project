@@ -235,30 +235,7 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: "1"
           trivyignores: .trivyignore
-
-      - name: Trivy full report
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
-        with:
-          image-ref: ${{ needs.build.outputs.image }}
-          format: table
-          output: trivy-results.txt
-          severity: HIGH,CRITICAL
-          exit-code: "0"
-
-      - name: Upload report
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-report
-          path: trivy-results.txt
-
-      - name: Trivy debug
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
-        with:
-          image-ref: ${{ needs.build.outputs.image }}
-          format: table
-          severity: HIGH,CRITICAL
-          exit-code: "0"
-          trivyignores: .trivyignore
+          limit-severities-for-sarif: true
 
       - name: Upload Trivy SARIF
         uses: github/codeql-action/upload-sarif@v4
