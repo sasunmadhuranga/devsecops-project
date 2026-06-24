@@ -106,7 +106,6 @@ jobs:
             --requirement requirements.txt \
             --format json \
             --output pip-audit-results.json
-        continue-on-error: true
 
       - name: Upload pip-audit Report
         uses: actions/upload-artifact@v4
