@@ -120,6 +120,10 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          args: >
+            -Dsonar.organization=sasunmadhuranga
+            -Dsonar.projectKey=sasunmadhuranga_devsecops-project
 
   # ---------------------------------------------------------------
   # GATE 3: IaC Scanning (Checkov on Terraform)
