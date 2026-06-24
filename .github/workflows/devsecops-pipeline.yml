@@ -55,7 +55,9 @@ jobs:
           python-version: "3.11"
 
       - name: Install Python security tools
-        run: pip install bandit pip-audit semgrep
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit semgrep pip-audit
 
       # Bandit — Python-specific SAST
       - name: Run Bandit
@@ -92,23 +94,17 @@ jobs:
       # pip-audit — CVEs in PyPI dependencies
       - name: Run pip-audit
         run: |
-          pip install -r requirements.txt
           pip-audit \
             --requirement requirements.txt \
-            --format sarif \
-            --output pip-audit-results.sarif
+            --format json \
+            --output pip-audit-results.json
         continue-on-error: true
 
-      - name: Ensure pip-audit SARIF exists
-        if: always()
-        run: |
-          [ -f pip-audit-results.sarif ] || echo '{"version":"2.1.0","runs":[]}' > pip-audit-results.sarif
-
-      - name: Upload pip-audit SARIF
-        uses: github/codeql-action/upload-sarif@v4
+      - name: Upload pip-audit Report
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: pip-audit-results.sarif
-          category: pip-audit
+          name: pip-audit-results
+          path: pip-audit-results.json
 
       # SonarQube Cloud (formerly SonarCloud)
       # sonarcloud-github-action was archived Oct 2025; sonarqube-scan-action is the replacement
