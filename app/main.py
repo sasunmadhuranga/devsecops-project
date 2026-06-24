@@ -53,6 +53,9 @@ async def security_headers(request, call_next):
 
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
 
     return response
 
