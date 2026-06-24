@@ -77,7 +77,7 @@ jobs:
       # Semgrep CLI — semgrep/semgrep-action is deprecated; use CLI directly
       - name: Run Semgrep
         run: |
-          semgrep scan \
+          semgrep ci \
             --config p/python \
             --config p/owasp-top-ten \
             --config p/secrets \
