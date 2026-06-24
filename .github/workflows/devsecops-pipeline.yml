@@ -83,7 +83,8 @@ jobs:
             --config p/secrets \
             --config p/jwt \
             --sarif \
-            --output semgrep-results.sarif
+            --output semgrep-results.sarif \
+            --text          
 
       - name: Upload Semgrep SARIF
         uses: github/codeql-action/upload-sarif@v4
