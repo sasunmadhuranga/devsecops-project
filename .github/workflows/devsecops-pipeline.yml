@@ -61,18 +61,16 @@ jobs:
       - name: Run Bandit
         run: |
           bandit -r app/ \
-            -f sarif \
-            -o bandit-results.sarif \
+            -f json \
+            -o bandit-results.json \
             --severity-level medium \
             --confidence-level medium || true
-          # Ensure file exists even if bandit finds no issues
-          [ -f bandit-results.sarif ] || echo '{"version":"2.1.0","runs":[]}' > bandit-results.sarif
 
-      - name: Upload Bandit SARIF
-        uses: github/codeql-action/upload-sarif@v4
+      - name: Upload Bandit Report
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: bandit-results.sarif
-          category: bandit
+          name: bandit-results
+          path: bandit-results.json
 
       # Semgrep CLI — semgrep/semgrep-action is deprecated; use CLI directly
       - name: Run Semgrep
