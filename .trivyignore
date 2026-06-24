@@ -1,0 +1,18 @@
+# .trivyignore — unfixable OS-level CVEs with justifications
+# All entries here have Status: "affected" or "fix_deferred" with no fixed version
+# available in Debian 13 (Bookworm) as of 2026-06-24.
+# Reviewed and accepted as risk for demo environment.
+# Production action: monitor Debian security tracker and patch when fix is released.
+
+# ncurses — CVE-2025-69720
+# Buffer overflow in ncurses. No fixed version available in Debian 13.
+# ncurses is a base package that cannot be removed from python:3.11-slim.
+# Exploitability is low — ncurses is a terminal library, not directly exposed.
+CVE-2025-69720
+
+# SQLite — CVE-2026-11822, CVE-2026-11824
+# Memory corruption in SQLite. No fixed version available in Debian 13.
+# SQLite is bundled with Python and cannot be independently upgraded.
+# Not directly used by this application.
+CVE-2026-11822
+CVE-2026-11824

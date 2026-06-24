@@ -210,7 +210,7 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419  # v2.1.5
 
-      # Step 1 — print full table for debugging (never fails)
+      # Step 1 — print full table for visibility (never fails)
       - name: Trivy scan — full report
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
@@ -219,6 +219,7 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: "0"
           skip-version-check: "true"
+          trivyignores: .trivyignore
 
       # Step 2 — generate SARIF and block on CRITICAL/HIGH
       # trivy-action@master was compromised March 2026 — pinned to v0.36.0
@@ -231,6 +232,7 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: "1"
           skip-version-check: "true"
+          trivyignores: .trivyignore
 
       - name: Upload Trivy SARIF
         uses: github/codeql-action/upload-sarif@v4
