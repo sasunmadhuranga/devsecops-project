@@ -7,3 +7,7 @@
 10027	IGNORE	Dev comments in OpenAPI spec
 # 90033 = Loosely Scoped Cookie
 90033	IGNORE	JWT in Authorization header, no cookies used
+10021 IGNORE
+10049 IGNORE
+90004 IGNORE
+90005 IGNORE
