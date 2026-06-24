@@ -334,6 +334,11 @@ jobs:
           cmd_options: "-a"
           fail_action: true
 
+      - name: Prepare reports directory
+        run: |
+          mkdir -p reports
+          chmod -R 777 reports
+
       - name: Run OWASP ZAP API Scan
         run: |
           docker run --rm \
@@ -343,13 +348,13 @@ jobs:
             zap-api-scan.py \
             -t ${{ needs.deploy-staging.outputs.staging_url }}/openapi.json \
             -f openapi \
-            -r zap-report.html
+            -r reports/zap-report.html
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
         with:
           name: zap-report
-          path: zap-report.html
+          path: reports/zap-report.html
 
   # ---------------------------------------------------------------
   # DEPLOY: ECS Fargate — Production (main/master branch only)
