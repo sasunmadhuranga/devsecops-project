@@ -13,7 +13,7 @@ env:
   ECS_SERVICE: devsecops-service
   ECS_TASK_DEFINITION: devsecops-task
   CONTAINER_NAME: app
-  TF_STATE_BUCKET: devsecops-tfstate-YOUR_ACCOUNT_ID  # update this
+  TF_STATE_BUCKET: devsecops-tfstate-630596767614  # update this
 
 jobs:
   # ---------------------------------------------------------------

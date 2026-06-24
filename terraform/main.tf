@@ -12,7 +12,7 @@ terraform {
   # so staging and production get separate state files.
   # See README for the exact init commands.
   backend "s3" {
-    bucket         = "devsecops-tfstate-YOUR_ACCOUNT_ID"
+    bucket         = "devsecops-tfstate-630596767614"
     region         = "us-east-1"
     encrypt        = true
     dynamodb_table = "devsecops-tfstate-lock"
