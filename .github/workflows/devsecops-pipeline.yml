@@ -251,6 +251,15 @@ jobs:
           name: trivy-report
           path: trivy-results.txt
 
+      - name: Trivy debug
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          image-ref: ${{ needs.build.outputs.image }}
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: "0"
+          trivyignores: .trivyignore
+
       - name: Upload Trivy SARIF
         uses: github/codeql-action/upload-sarif@v4
         if: always() && hashFiles('trivy-results.sarif') != ''
