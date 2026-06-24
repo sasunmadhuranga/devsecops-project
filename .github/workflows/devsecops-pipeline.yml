@@ -335,11 +335,21 @@ jobs:
           fail_action: true
 
       - name: Run OWASP ZAP API Scan
-        uses: zaproxy/action-api-scan@v0.7.0
+        run: |
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}:/zap/wrk:rw \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-api-scan.py \
+            -t ${{ needs.deploy-staging.outputs.staging_url }}/openapi.json \
+            -f openapi \
+            -r zap-report.html
+
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v4
         with:
-          target: ${{ needs.deploy-staging.outputs.staging_url }}/openapi.json
-          format: openapi
-          fail_action: true
+          name: zap-report
+          path: zap-report.html
 
   # ---------------------------------------------------------------
   # DEPLOY: ECS Fargate — Production (main/master branch only)
