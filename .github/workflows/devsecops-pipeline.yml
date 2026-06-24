@@ -13,7 +13,7 @@ env:
   ECS_SERVICE: devsecops-service
   ECS_TASK_DEFINITION: devsecops-task
   CONTAINER_NAME: app
-  TF_STATE_BUCKET: devsecops-tfstate-630596767614  # update this
+  TF_STATE_BUCKET: devsecops-tfstate-630596767614
 
 jobs:
   # ---------------------------------------------------------------
@@ -116,7 +116,7 @@ jobs:
       # SonarQube Cloud (formerly SonarCloud)
       # sonarcloud-github-action was archived Oct 2025; sonarqube-scan-action is the replacement
       - name: SonarQube Cloud Scan
-        uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e # nosemgrep: generic.secrets.security.detected-sonarqube-docs-api-key
+        uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e  # v8.2.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
@@ -200,6 +200,9 @@ jobs:
     permissions:
       security-events: write
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708  # v5.1.1
         with:
@@ -218,12 +221,12 @@ jobs:
           format: table
           severity: CRITICAL,HIGH
           exit-code: "0"
-          skip-version-check: "true"
           trivyignores: .trivyignore
 
       # Step 2 — generate SARIF and block on CRITICAL/HIGH
       # trivy-action@master was compromised March 2026 — pinned to v0.36.0
       - name: Trivy scan — SARIF + gate
+        id: trivy-sarif
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
           image-ref: ${{ needs.build.outputs.image }}
@@ -231,12 +234,11 @@ jobs:
           output: trivy-results.sarif
           severity: CRITICAL,HIGH
           exit-code: "1"
-          skip-version-check: "true"
           trivyignores: .trivyignore
 
       - name: Upload Trivy SARIF
         uses: github/codeql-action/upload-sarif@v4
-        if: always()
+        if: always() && hashFiles('trivy-results.sarif') != ''
         with:
           sarif_file: trivy-results.sarif
           category: trivy
@@ -292,7 +294,6 @@ jobs:
             --output text)
           echo "url=http://$URL" >> $GITHUB_OUTPUT
 
-
   # ---------------------------------------------------------------
   # GATE 5: DAST (OWASP ZAP against live staging)
   # ---------------------------------------------------------------
@@ -333,7 +334,7 @@ jobs:
           artifact_name: zap-api-report
 
   # ---------------------------------------------------------------
-  # DEPLOY: ECS Fargate — Production (main branch only)
+  # DEPLOY: ECS Fargate — Production (main/master branch only)
   # ---------------------------------------------------------------
   deploy-production:
     name: Deploy — ECS Fargate (Production)
