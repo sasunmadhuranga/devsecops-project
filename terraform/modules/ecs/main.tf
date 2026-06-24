@@ -116,7 +116,8 @@ resource "aws_ecs_task_definition" "app" {
 
     environment = [
       { name = "ENVIRONMENT", value = var.environment },
-      { name = "ALLOWED_ORIGINS", value = "*" }
+      { name = "ALLOWED_ORIGINS", value = "*" },
+      { name = "DEMO_PASSWORD",  value = "demo1234" }
     ]
 
     logConfiguration = {
