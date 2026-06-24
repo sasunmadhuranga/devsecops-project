@@ -16,14 +16,14 @@ resource "aws_internet_gateway" "main" {
   tags   = { Name = "${var.project}-${var.environment}-igw" }
 }
 
-# Public subnets (ALB)
+# Public subnets (ALB only — ECS tasks run in private subnets)
 resource "aws_subnet" "public" {
   count             = length(var.azs)
   vpc_id            = aws_vpc.main.id
   cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index)
   availability_zone = var.azs[count.index]
 
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = false  # nosemgrep: terraform.aws.security.aws-subnet-has-public-ip-address
   tags = { Name = "${var.project}-${var.environment}-public-${count.index + 1}" }
 }
 

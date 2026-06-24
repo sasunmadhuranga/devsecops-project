@@ -115,7 +115,7 @@ jobs:
       # SonarQube Cloud (formerly SonarCloud)
       # sonarcloud-github-action was archived Oct 2025; sonarqube-scan-action is the replacement
       - name: SonarQube Cloud Scan
-        uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e  # v8.2.0
+        uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e  # v8.2.0  # nosemgrep: generic.secrets.security.detected-sonarqube-docs-api-key
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
