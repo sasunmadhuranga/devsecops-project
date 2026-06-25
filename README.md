@@ -168,17 +168,5 @@ git push origin main
 | 4    | Trivy      | OS + library CVEs in Docker image            | HIGH/CRITICAL   |
 | 5    | ZAP        | XSS, SQLi, auth bypass on live app           | WARN+           |
 
-## Estimated AWS Cost
-
-| Resource          | Est. monthly cost  |
-|-------------------|--------------------|
-| ECS Fargate       | ~$5–8 (0.25vCPU)  |
-| ALB               | ~$16–18            |
-| NAT Gateway       | ~$5–10             |
-| ECR storage       | ~$0.50             |
-| SSM parameters    | Free tier          |
-| CloudWatch logs   | ~$1                |
-| **Total**         | **~$28–38/month**  |
-
 > Tip: tear down NAT Gateway and ALB when not actively testing to save credits.
 > `terraform destroy` takes ~5 minutes and can be reapplied when needed.
