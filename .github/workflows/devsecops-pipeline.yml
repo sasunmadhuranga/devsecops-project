@@ -9,9 +9,9 @@ on:
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: devsecops-staging
-  ECS_CLUSTER: devsecops-staging-cluster        # was: devsecops-cluster
-  ECS_SERVICE: devsecops-staging-service        # was: devsecops-service
-  ECS_TASK_DEFINITION: devsecops-staging        # was: devsecops-task
+  ECS_CLUSTER: devsecops-staging-cluster
+  ECS_SERVICE: devsecops-staging-service
+  ECS_TASK_DEFINITION: devsecops-staging
   CONTAINER_NAME: app
   TF_STATE_BUCKET: devsecops-tfstate-630596767614
 
@@ -26,13 +26,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # full git history — Gitleaks scans all commits
+          fetch-depth: 0
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e  # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # No GITLEAKS_LICENSE needed — personal account repo is free
 
   # ---------------------------------------------------------------
   # GATE 2: SAST + Dependency Audit + Code Quality (SonarCloud)
@@ -47,7 +46,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # SonarCloud needs full history
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -59,7 +58,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install bandit semgrep pip-audit
 
-      # Bandit — Python-specific SAST
       - name: Run Bandit
         run: |
           bandit -r app/ \
@@ -74,7 +72,6 @@ jobs:
           name: bandit-results
           path: bandit-results.json
 
-      # Semgrep CLI — semgrep/semgrep-action is deprecated; use CLI directly
       - name: Run Semgrep (SARIF output)
         run: |
           semgrep ci \
@@ -99,7 +96,6 @@ jobs:
             --exclude-rule "terraform.aws.security.insecure-load-balancer-tls-version.insecure-load-balancer-tls-version" \
             --text
 
-      # pip-audit — CVEs in PyPI dependencies
       - name: Run pip-audit
         run: |
           pip-audit \
@@ -113,8 +109,6 @@ jobs:
           name: pip-audit-results
           path: pip-audit-results.json
 
-      # SonarQube Cloud (formerly SonarCloud)
-      # sonarcloud-github-action was archived Oct 2025; sonarqube-scan-action is the replacement
       - name: SonarQube Cloud Scan
         uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e  # v8.2.0
         env:
@@ -186,9 +180,17 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          # Build once
+          docker build -t $ECR_REGISTRY/devsecops-staging:$IMAGE_TAG .
+
+          # Push to staging repo
+          docker push $ECR_REGISTRY/devsecops-staging:$IMAGE_TAG
+
+          # Tag and push same image to production repo (build once, deploy everywhere)
+          docker tag $ECR_REGISTRY/devsecops-staging:$IMAGE_TAG             $ECR_REGISTRY/devsecops-production:$IMAGE_TAG
+          docker push $ECR_REGISTRY/devsecops-production:$IMAGE_TAG
+
+          echo "image=$ECR_REGISTRY/devsecops-staging:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
   # ---------------------------------------------------------------
   # GATE 4: Container Image Scanning (Trivy)
@@ -213,7 +215,6 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419  # v2.1.5
 
-      # Step 1 — print full table for visibility (never fails)
       - name: Trivy scan — full report
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
@@ -223,8 +224,6 @@ jobs:
           exit-code: "0"
           trivyignores: .trivyignore
 
-      # Step 2 — generate SARIF and block on CRITICAL/HIGH
-      # trivy-action@master was compromised March 2026 — pinned to v0.36.0
       - name: Trivy scan — SARIF + gate
         id: trivy-sarif
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
@@ -277,7 +276,6 @@ jobs:
             -backend-config="use_lockfile=false"
         working-directory: terraform/
 
-      # Secret passed via TF_VAR env — avoids expanding secrets directly in run block
       - name: Terraform Apply (Staging)
         env:
           TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET_STAGING }}
@@ -328,7 +326,6 @@ jobs:
           echo "Staging never became healthy after 4 minutes"
           exit 1
 
-      # TODO: pin to full SHA once ZAP publishes immutable releases
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
@@ -391,7 +388,6 @@ jobs:
             -backend-config="use_lockfile=false"
         working-directory: terraform/
 
-      # Secret passed via TF_VAR env — avoids expanding secrets directly in run block
       - name: Terraform Apply (Production)
         env:
           TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET_PRODUCTION }}
