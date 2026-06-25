@@ -48,6 +48,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
   rule {
     id     = "expire-logs"
     status = "Enabled"
+    filter {}  # required in AWS provider v4+ — empty filter means apply to all objects
     expiration { days = 30 }
   }
 }
@@ -128,10 +129,7 @@ resource "aws_lb_target_group" "app" {
   tags = { Name = "${var.project}-${var.environment}-tg" }
 }
 
-# checkov:skip=CKV_AWS_2: HTTPS requires a domain and ACM certificate.
-# HTTP is intentional for this demo — in production add an ACM cert and
-# redirect port 80 to 443 using a redirect action on the listener.
-resource "aws_lb_listener" "http" { # nosemgrep: terraform.aws.security.insecure-load-balancer-tls-version
+resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = 80
   protocol          = "HTTP"
