@@ -15,7 +15,6 @@ terraform {
     bucket         = "devsecops-tfstate-630596767614"
     region         = "us-east-1"
     encrypt        = true
-    dynamodb_table = "devsecops-tfstate-lock"
     # key is intentionally omitted — passed via -backend-config
   }
 }

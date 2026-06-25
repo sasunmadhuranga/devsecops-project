@@ -273,7 +273,8 @@ jobs:
           terraform init \
             -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" \
             -backend-config="key=devsecops/staging/terraform.tfstate" \
-            -backend-config="region=${{ env.AWS_REGION }}"
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="use_lockfile=false"
         working-directory: terraform/
 
       # Secret passed via TF_VAR env — avoids expanding secrets directly in run block
@@ -281,7 +282,9 @@ jobs:
         env:
           TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET_STAGING }}
         run: |
-          terraform apply -auto-approve \
+          terraform apply \
+            -lock=false \
+            -auto-approve \
             -var-file=envs/staging/terraform.tfvars \
             -var="image_tag=${{ github.sha }}"
         working-directory: terraform/
@@ -384,7 +387,8 @@ jobs:
           terraform init \
             -backend-config="bucket=${{ env.TF_STATE_BUCKET }}" \
             -backend-config="key=devsecops/production/terraform.tfstate" \
-            -backend-config="region=${{ env.AWS_REGION }}"
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="use_lockfile=false"
         working-directory: terraform/
 
       # Secret passed via TF_VAR env — avoids expanding secrets directly in run block
@@ -392,7 +396,9 @@ jobs:
         env:
           TF_VAR_jwt_secret: ${{ secrets.JWT_SECRET_PRODUCTION }}
         run: |
-          terraform apply -auto-approve \
+          terraform apply \
+            -lock=false \
+            -auto-approve \
             -var-file=envs/production/terraform.tfvars \
             -var="image_tag=${{ github.sha }}"
         working-directory: terraform/
