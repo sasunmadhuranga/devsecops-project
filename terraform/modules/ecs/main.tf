@@ -76,7 +76,7 @@ resource "aws_iam_role_policy" "ssm_read" {
   })
 }
 
-# ── CloudWatch Log Group ───────────────────────────────────────────
+# CloudWatch Log Group
 # checkov:skip=CKV_AWS_338: 30-day retention is appropriate for a demo project.
 # In production increase to 90+ days to meet audit/compliance requirements.
 resource "aws_cloudwatch_log_group" "app" {
@@ -84,7 +84,7 @@ resource "aws_cloudwatch_log_group" "app" {
   retention_in_days = 30
 }
 
-# ── ECS Cluster ────────────────────────────────────────────────────
+# ECS Cluster
 resource "aws_ecs_cluster" "main" {
   name = "${var.project}-${var.environment}-cluster"
 
