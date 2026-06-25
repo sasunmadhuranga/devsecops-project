@@ -72,7 +72,7 @@ jobs:
           name: bandit-results
           path: bandit-results.json
 
-      - name: Run Semgrep
+      - name: Run Semgrep (Upload to Cloud)
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
         run: |
@@ -82,9 +82,7 @@ jobs:
             --config p/secrets \
             --config p/jwt \
             --exclude-rule "generic.secrets.security.detected-sonarqube-docs-api-key.detected-sonarqube-docs-api-key" \
-            --exclude-rule "terraform.aws.security.insecure-load-balancer-tls-version.insecure-load-balancer-tls-version" \
-            --sarif \
-            --output semgrep-results.sarif
+            --exclude-rule "terraform.aws.security.insecure-load-balancer-tls-version.insecure-load-balancer-tls-version"
 
       - name: Print Semgrep findings
         run: |
@@ -96,20 +94,6 @@ jobs:
             --exclude-rule "generic.secrets.security.detected-sonarqube-docs-api-key.detected-sonarqube-docs-api-key" \
             --exclude-rule "terraform.aws.security.insecure-load-balancer-tls-version.insecure-load-balancer-tls-version" \
             --text
-
-      - name: Upload Semgrep SARIF
-        uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: semgrep-results.sarif
-          category: semgrep
-
-      - name: Upload Semgrep Report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: semgrep-results
-          path: semgrep-results.sarif
 
       - name: Run pip-audit
         run: |
