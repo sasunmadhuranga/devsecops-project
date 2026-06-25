@@ -12,7 +12,7 @@ COPY requirements.txt .
 RUN pip install --upgrade pip \
     && pip install --prefix=/install --no-cache-dir -r requirements.txt
 
-# ── Stage 2: runtime ──────────────────────────────────────────────
+# ── Stage 2: runtime 
 FROM python:3.11-slim AS runtime
 
 # Security: run as non-root user

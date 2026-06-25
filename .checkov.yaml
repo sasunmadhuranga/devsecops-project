@@ -66,7 +66,7 @@ skip-check:
   #   Production: create dedicated KMS CMK for SSM parameters.
   - CKV_AWS_337
 
-  # ── VPC ────────────────────────────────────────────────────────────────────
+  # VPC 
   # CKV_AWS_130: Public subnets auto-assign public IP — required for NAT Gateway
   #   and ALB instances to be reachable from the internet.
   #   Production: acceptable for public subnet resources (ALB, NAT GW).
