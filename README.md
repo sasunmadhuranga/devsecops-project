@@ -1,4 +1,4 @@
-# DevSecOps Pipeline — FastAPI + ECS Fargate + GitHub Actions
+# DevSecOps Pipeline - FastAPI + ECS Fargate + GitHub Actions
 
 A production-style DevSecOps project that embeds five security gates into a
 CI/CD pipeline deploying a FastAPI backend to AWS ECS Fargate.
@@ -7,7 +7,7 @@ CI/CD pipeline deploying a FastAPI backend to AWS ECS Fargate.
 
 
 <p align="center">
-    <img src="screenshots/1.png" width="600"/>
+    <img src="screenshots/diagram.png" width="600"/>
 </p>
 
 All security tools upload SARIF reports to the GitHub Security tab.

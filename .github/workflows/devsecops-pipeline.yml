@@ -13,7 +13,7 @@ env:
   ECS_SERVICE: devsecops-staging-service
   ECS_TASK_DEFINITION: devsecops-staging
   CONTAINER_NAME: app
-  TF_STATE_BUCKET: devsecops-tfstate-630596767614
+  TF_STATE_BUCKET: devsecops-tfstate-.......
 
 jobs:
   # GATE 1: Secret Scanning
