@@ -15,7 +15,6 @@ variable "demo_password_arn" {
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
-# ── Security Group for ECS tasks ───────────────────────────────────
 resource "aws_security_group" "ecs_tasks" {
   name        = "${var.project}-${var.environment}-ecs-sg"
   description = "Allow inbound from ALB only"
@@ -39,7 +38,7 @@ resource "aws_security_group" "ecs_tasks" {
   tags = { Name = "${var.project}-${var.environment}-ecs-sg" }
 }
 
-# ── IAM Role for ECS task execution ───────────────────────────────
+# IAM Role for ECS task execution
 resource "aws_iam_role" "ecs_task_execution" {
   name = "${var.project}-${var.environment}-ecs-exec-role"
 
@@ -76,15 +75,11 @@ resource "aws_iam_role_policy" "ssm_read" {
   })
 }
 
-# CloudWatch Log Group
-# checkov:skip=CKV_AWS_338: 30-day retention is appropriate for a demo project.
-# In production increase to 90+ days to meet audit/compliance requirements.
 resource "aws_cloudwatch_log_group" "app" {
   name              = "/ecs/${var.project}-${var.environment}"
   retention_in_days = 30
 }
 
-# ECS Cluster
 resource "aws_ecs_cluster" "main" {
   name = "${var.project}-${var.environment}-cluster"
 
@@ -96,7 +91,7 @@ resource "aws_ecs_cluster" "main" {
   tags = { Name = "${var.project}-${var.environment}-cluster" }
 }
 
-# ── Task Definition ────────────────────────────────────────────────
+# Task Definition
 resource "aws_ecs_task_definition" "app" {
   family                   = "${var.project}-${var.environment}"
   network_mode             = "awsvpc"
@@ -115,7 +110,7 @@ resource "aws_ecs_task_definition" "app" {
       protocol      = "tcp"
     }]
 
-    # Inject JWT_SECRET from SSM at runtime — never baked into image
+    # Inject JWT_SECRET from SSM at runtime. Never baked into image
     secrets = [{
       name      = "JWT_SECRET"
       valueFrom = var.jwt_secret_arn
@@ -152,7 +147,7 @@ resource "aws_ecs_task_definition" "app" {
   tags = { Name = "${var.project}-${var.environment}-task" }
 }
 
-# ── ECS Service ────────────────────────────────────────────────────
+# ECS Service
 resource "aws_ecs_service" "app" {
   name            = "${var.project}-${var.environment}-service"
   cluster         = aws_ecs_cluster.main.id

@@ -5,20 +5,20 @@
 # Production action: monitor Debian security tracker and patch when fixes release.
 # Tracker: https://security-tracker.debian.org/tracker/
 
-# ── ncurses — CVE-2025-69720 ──────────────────────────────────────
+# ncurses — CVE-2025-69720
 # Buffer overflow in ncurses. No fixed version in Debian 13.
 # ncurses is an essential base package, cannot be removed.
 # Low exploitability — terminal library, not directly exposed via network.
 CVE-2025-69720
 
-# ── SQLite — CVE-2026-11822, CVE-2026-11824 ───────────────────────
+# SQLite — CVE-2026-11822, CVE-2026-11824
 # Memory corruption in SQLite. No fixed version in Debian 13.
 # Bundled with Python, cannot be independently upgraded.
 # Not directly used by this application.
 CVE-2026-11822
 CVE-2026-11824
 
-# ── perl-base — multiple CVEs ─────────────────────────────────────
+# perl-base — multiple CVEs
 # perl-base is an essential Debian package and cannot be removed
 # (apt requires --allow-remove-essential which risks breaking the image).
 # These CVEs are in Archive::Tar and IO::Compress — not used by this app.
@@ -29,7 +29,7 @@ CVE-2026-8376
 CVE-2026-48962
 CVE-2026-9538
 
-# ── setuptools vendored packages (base image) ─────────────────────
+# setuptools vendored packages (base image)
 # python:3.11-slim ships with setuptools-79.0.1 which vendors old
 # versions of jaraco.context and wheel containing these CVEs.
 # We install setuptools-80.9.0 on top but the base image version

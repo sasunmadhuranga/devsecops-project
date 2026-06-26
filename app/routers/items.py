@@ -12,8 +12,6 @@ class Item(BaseModel):
     description: Optional[str] = None
     price: float
 
-
-# In-memory store for demo purposes
 items_db: dict[str, Item] = {}
 
 

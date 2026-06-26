@@ -16,7 +16,6 @@ resource "aws_internet_gateway" "main" {
   tags   = { Name = "${var.project}-${var.environment}-igw" }
 }
 
-# Public subnets (ALB only — ECS tasks run in private subnets)
 resource "aws_subnet" "public" {
   count             = length(var.azs)
   vpc_id            = aws_vpc.main.id
@@ -27,7 +26,6 @@ resource "aws_subnet" "public" {
   tags = { Name = "${var.project}-${var.environment}-public-${count.index + 1}" }
 }
 
-# Private subnets (ECS tasks)
 resource "aws_subnet" "private" {
   count             = length(var.azs)
   vpc_id            = aws_vpc.main.id
@@ -37,7 +35,6 @@ resource "aws_subnet" "private" {
   tags = { Name = "${var.project}-${var.environment}-private-${count.index + 1}" }
 }
 
-# NAT Gateway for private subnet outbound access
 resource "aws_eip" "nat" {
   domain = "vpc"
   tags   = { Name = "${var.project}-${var.environment}-nat-eip" }
@@ -50,7 +47,6 @@ resource "aws_nat_gateway" "main" {
   depends_on    = [aws_internet_gateway.main]
 }
 
-# Route tables
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 

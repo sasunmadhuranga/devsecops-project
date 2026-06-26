@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 
 router = APIRouter()
 
-JWT_SECRET = os.getenv("JWT_SECRET")  # loaded from SSM Parameter Store via ECS task def
+JWT_SECRET = os.getenv("JWT_SECRET") 
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_HOURS = 24
 DEMO_PASSWORD = os.getenv("DEMO_PASSWORD")
@@ -24,8 +24,6 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
-
-# Demo in-memory user store — replace with DynamoDB in production
 DEMO_USERS = {
     "demo@example.com": bcrypt.hashpw(DEMO_PASSWORD.encode(), bcrypt.gensalt()).decode()
 }

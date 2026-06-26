@@ -1,6 +1,4 @@
-# .checkov.yaml — project-level policy overrides
-# Each skip is justified below. Production remediation notes are included.
-
+# Each skip is justified below.
 soft-fail: false
 framework:
   - terraform
@@ -8,7 +6,7 @@ directory:
   - terraform/
 
 skip-check:
-  # ── ALB / Networking ───────────────────────────────────────────────────────
+  # ALB / Networking
   # CKV_AWS_2: HTTP listener — demo has no domain/ACM cert.
   #   Production: add ACM cert, HTTPS listener on 443, redirect 80→443.
   - CKV_AWS_2
@@ -34,7 +32,7 @@ skip-check:
   #   Production: set drop_invalid_header_fields = true with HTTPS.
   - CKV_AWS_131
 
-  # ── S3 (ALB log bucket) ────────────────────────────────────────────────────
+  # S3 (ALB log bucket)
   # CKV_AWS_145: S3 KMS encryption — log bucket uses SSE-S3 (AES256) by default.
   #   Production: add aws_s3_bucket_server_side_encryption_configuration with KMS CMK.
   - CKV_AWS_145
@@ -48,12 +46,12 @@ skip-check:
   #   Production: add abort_incomplete_multipart_upload rule for data buckets.
   - CKV_AWS_300
 
-  # ── ECR ────────────────────────────────────────────────────────────────────
+  # ECR
   # CKV_AWS_136: ECR KMS encryption — uses AES256 (SSE) by default.
   #   Production: create aws_kms_key and reference in encryption_configuration.
   - CKV_AWS_136
 
-  # ── ECS / CloudWatch ───────────────────────────────────────────────────────
+  # ECS / CloudWatch 
   # CKV_AWS_158: CloudWatch log group KMS encryption — cost overhead for demo.
   #   Production: create KMS CMK and set kms_key_id on the log group.
   - CKV_AWS_158
@@ -61,7 +59,7 @@ skip-check:
   #   Production: increase to 90+ days for compliance.
   - CKV_AWS_338
 
-  # ── SSM ────────────────────────────────────────────────────────────────────
+  # SSM
   # CKV_AWS_337: SSM parameter KMS CMK — uses default SSM key (aws/ssm).
   #   Production: create dedicated KMS CMK for SSM parameters.
   - CKV_AWS_337

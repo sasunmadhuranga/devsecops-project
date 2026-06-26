@@ -121,7 +121,7 @@ Staging and production use separate state files — pass the state key via
 ```bash
 cd terraform
 
-# ── Staging ────────────────────────────────────────────────────────
+# Staging
 terraform init \
   -backend-config="bucket=devsecops-tfstate-YOUR_ACCOUNT_ID" \
   -backend-config="key=devsecops/staging/terraform.tfstate" \
@@ -135,7 +135,7 @@ terraform apply \
 # Verify staging is healthy before continuing
 # → check AWS Console → ECS, hit the staging ALB /health endpoint
 
-# ── Production ─────────────────────────────────────────────────────
+# Production
 terraform init \
   -backend-config="bucket=devsecops-tfstate-YOUR_ACCOUNT_ID" \
   -backend-config="key=devsecops/production/terraform.tfstate" \
@@ -170,3 +170,32 @@ git push origin main
 
 > Tip: tear down NAT Gateway and ALB when not actively testing to save credits.
 > `terraform destroy` takes ~5 minutes and can be reapplied when needed.
+
+---
+## 📸 Screenshots
+<p align="center">
+    <img src="screenshots/1.png" width="600"/>
+    <img src="screenshots/2.png" width="600"/>
+    <img src="screenshots/3.png" width="600"/>
+    <img src="screenshots/5.png" width="600"/>
+    <img src="screenshots/6.png" width="600"/>
+    <img src="screenshots/9.png" width="600"/>
+    <img src="screenshots/10.png" width="600"/>
+    <img src="screenshots/11.png" width="600"/>
+    <img src="screenshots/13.png" width="600"/>
+    <img src="screenshots/14.png" width="600"/>
+    <img src="screenshots/18.png" width="600"/>
+    <img src="screenshots/19.png" width="600"/>
+    <img src="screenshots/20.png" width="600"/>
+    <img src="screenshots/21.png" width="600"/>
+    <img src="screenshots/22.png" width="600"/>
+    <img src="screenshots/23.png" width="600"/>
+    <img src="screenshots/24.png" width="600"/>
+</p>
+
+---
+
+## Author
+Sasun Madhuranga
+
+GitHub: https://github.com/sasunmadhuranga

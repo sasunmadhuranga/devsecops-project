@@ -31,7 +31,6 @@ provider "aws" {
   }
 }
 
-# ── VPC ────────────────────────────────────────────────────────────
 module "vpc" {
   source = "./modules/vpc"
 
@@ -41,7 +40,6 @@ module "vpc" {
   azs         = var.azs
 }
 
-# ── ECR ────────────────────────────────────────────────────────────
 module "ecr" {
   source = "./modules/ecr"
 
@@ -49,7 +47,6 @@ module "ecr" {
   environment = var.environment
 }
 
-# ── SSM Parameter Store ────────────────────────────────────────────
 module "ssm" {
   source = "./modules/ssm"
 
@@ -58,7 +55,6 @@ module "ssm" {
   jwt_secret  = var.jwt_secret
 }
 
-# ── ALB ────────────────────────────────────────────────────────────
 module "alb" {
   source = "./modules/alb"
 
@@ -68,7 +64,6 @@ module "alb" {
   public_subnet_ids = module.vpc.public_subnet_ids
 }
 
-# ── ECS Fargate ────────────────────────────────────────────────────
 module "ecs" {
   source = "./modules/ecs"
 

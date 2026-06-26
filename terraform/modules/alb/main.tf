@@ -34,7 +34,6 @@ resource "aws_security_group" "alb" {
   tags = { Name = "${var.project}-${var.environment}-alb-sg" }
 }
 
-# S3 bucket for ALB access logs — satisfies CKV_AWS_91
 resource "aws_s3_bucket" "alb_logs" {
   bucket        = "${var.project}-${var.environment}-alb-logs"
   force_destroy = true  # allow easy teardown in demo environment
@@ -48,19 +47,17 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
   rule {
     id     = "expire-logs"
     status = "Enabled"
-    filter {}  # required in AWS provider v4+ — empty filter means apply to all objects
+    filter {} 
     expiration { days = 30 }
   }
 }
 
-# Enable server-side logging on the log bucket itself — satisfies CKV_AWS_18
 resource "aws_s3_bucket_logging" "alb_logs" {
   bucket        = aws_s3_bucket.alb_logs.id
   target_bucket = aws_s3_bucket.alb_logs.id
   target_prefix = "self-logs/"
 }
 
-# Enforce HTTPS-only access — satisfies CKV_AWS_54
 resource "aws_s3_bucket_policy" "alb_logs" {
   bucket = aws_s3_bucket.alb_logs.id
 
@@ -100,7 +97,6 @@ resource "aws_lb" "main" {
 
   enable_deletion_protection = false  # set true in production
 
-  # Access logs to S3 — satisfies CKV_AWS_91
   access_logs {
     bucket  = aws_s3_bucket.alb_logs.id
     prefix  = "alb"

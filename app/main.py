@@ -11,7 +11,6 @@ from app.middleware.logging import RequestLoggingMiddleware
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Application startup")
@@ -28,7 +27,6 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
-# CORS — restrict in production via env var
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 
 app.add_middleware(RequestLoggingMiddleware)
