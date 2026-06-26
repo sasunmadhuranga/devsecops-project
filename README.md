@@ -5,26 +5,10 @@ CI/CD pipeline deploying a FastAPI backend to AWS ECS Fargate.
 
 ## Architecture
 
-```
-git push
-   │
-   ├─ Gate 1: Gitleaks        — secret scanning on every commit
-   ├─ Gate 2: Bandit           — Python SAST
-   │          Semgrep          — broader SAST (OWASP Top 10 rules)
-   │          pip-audit        — CVEs in PyPI dependencies
-   ├─ Gate 3: Checkov          — Terraform IaC misconfiguration scan
-   │
-   ├─ Docker build → ECR push
-   │
-   ├─ Gate 4: Trivy            — container image CVE scan
-   │
-   ├─ Deploy → ECS Fargate (staging)
-   │
-   ├─ Gate 5: OWASP ZAP        — DAST against live staging endpoint
-   │          (baseline + API scan)
-   │
-   └─ Deploy → ECS Fargate (production)  [main branch only]
-```
+
+<p align="center">
+    <img src="screenshots/1.png" width="600"/>
+</p>
 
 All security tools upload SARIF reports to the GitHub Security tab.
 
@@ -49,36 +33,9 @@ All security tools upload SARIF reports to the GitHub Security tab.
 
 ## Project Structure
 
-```
-.
-├── app/
-│   ├── main.py                  # FastAPI app entry point
-│   ├── routers/
-│   │   ├── auth.py              # JWT login endpoint
-│   │   └── items.py             # CRUD demo endpoints
-│   └── middleware/
-│       └── logging.py           # Request logging middleware
-├── terraform/
-│   ├── main.tf                  # Root module — wires everything together
-│   ├── variables.tf
-│   ├── outputs.tf
-│   ├── modules/
-│   │   ├── vpc/                 # VPC, subnets, NAT Gateway, route tables
-│   │   ├── ecr/                 # ECR repository + lifecycle policy
-│   │   ├── alb/                 # ALB, target group, listener, security group
-│   │   ├── ecs/                 # ECS cluster, task definition, Fargate service
-│   │   └── ssm/                 # SSM Parameter Store secrets
-│   └── envs/
-│       ├── staging/terraform.tfvars
-│       └── production/terraform.tfvars
-├── .github/workflows/
-│   └── devsecops-pipeline.yml   # Full CI/CD + security gates
-├── .zap/rules.tsv               # ZAP false-positive suppressions
-├── .checkov.yaml                # Checkov policy overrides (justified)
-├── Dockerfile                   # Multi-stage, non-root, health check
-├── .dockerignore
-└── requirements.txt
-```
+<p align="center">
+    <img src="screenshots/Structure.png" width="600"/>
+</p>
 
 ## Setup
 
@@ -169,7 +126,7 @@ git push origin main
 | 5    | ZAP        | XSS, SQLi, auth bypass on live app           | WARN+           |
 
 
-### Destroy everything
+### Destroy Infrastructure
 
 ```bash
 # Staging first
@@ -196,6 +153,8 @@ terraform init \
 terraform destroy -lock=false \
   -var-file="envs/production/terraform.tfvars" \
   -var="jwt_secret=placeholder"
+
+```
 
 ---
 
