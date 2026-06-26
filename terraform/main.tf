@@ -12,7 +12,7 @@ terraform {
   # so staging and production get separate state files.
   # See README for the exact init commands.
   backend "s3" {
-    bucket         = "devsecops-tfstate-630596767614"
+    bucket         = "devsecops-tfstate-......"
     region         = "us-east-1"
     encrypt        = true
     # key is intentionally omitted — passed via -backend-config

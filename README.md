@@ -168,10 +168,37 @@ git push origin main
 | 4    | Trivy      | OS + library CVEs in Docker image            | HIGH/CRITICAL   |
 | 5    | ZAP        | XSS, SQLi, auth bypass on live app           | WARN+           |
 
-> Tip: tear down NAT Gateway and ALB when not actively testing to save credits.
-> `terraform destroy` takes ~5 minutes and can be reapplied when needed.
+
+### Destroy everything
+
+```bash
+# Staging first
+cd terraform
+
+terraform init \
+  -backend-config="bucket=devsecops-tfstate-630596767614" \
+  -backend-config="key=devsecops/staging/terraform.tfstate" \
+  -backend-config="region=us-east-1" \
+  -backend-config="use_lockfile=false"
+
+terraform destroy -lock=false \
+  -var-file="envs/staging/terraform.tfvars" \
+  -var="jwt_secret=placeholder"
+
+# Then production
+terraform init \
+  -backend-config="bucket=devsecops-tfstate-630596767614" \
+  -backend-config="key=devsecops/production/terraform.tfstate" \
+  -backend-config="region=us-east-1" \
+  -backend-config="use_lockfile=false" \
+  -reconfigure
+
+terraform destroy -lock=false \
+  -var-file="envs/production/terraform.tfvars" \
+  -var="jwt_secret=placeholder"
 
 ---
+
 ## 📸 Screenshots
 <p align="center">
     <img src="screenshots/1.png" width="600"/>
