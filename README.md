@@ -5,7 +5,6 @@ CI/CD pipeline deploying a FastAPI backend to AWS ECS Fargate.
 
 ## Architecture
 
-
 <p align="center">
     <img src="screenshots/diagram.png" width="600"/>
 </p>
